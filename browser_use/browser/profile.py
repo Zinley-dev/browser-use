@@ -622,6 +622,25 @@ class BrowserProfile(BrowserConnectArgs, BrowserLaunchPersistentContextArgs, Bro
 
 	wait_between_actions: float = Field(default=0.1, description='Time to wait between actions.')
 
+	# Network idle settings (adaptive waiting)
+	enable_adaptive_network_idle: bool = Field(
+		default=True, description='Enable adaptive network idle detection (polls until network is stable)'
+	)
+	network_idle_time: float = Field(
+		default=0.5,
+		description='Network must be idle (or have <= network_idle_max_inflight requests) for this duration before considering page stable (seconds)',
+	)
+	network_idle_max_inflight: int = Field(
+		default=2,
+		description='Maximum number of in-flight network requests to consider as "idle" (0=networkidle0, 2=networkidle2)',
+	)
+	network_idle_timeout: float = Field(
+		default=10.0, description='Maximum time to wait for network idle before giving up and proceeding anyway (seconds)'
+	)
+	network_idle_poll_interval: float = Field(
+		default=0.1, description='How often to check network state when waiting for idle (seconds)'
+	)
+
 	# --- UI/viewport/DOM ---
 	highlight_elements: bool = Field(default=True, description='Highlight interactive elements on the page.')
 	dom_highlight_elements: bool = Field(

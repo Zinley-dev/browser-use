@@ -240,6 +240,55 @@ class DOMWatchdog(BaseWatchdog):
 
 		return []
 
+	async def _wait_for_network_idle(self) -> bool:
+		"""Wait until network is idle (like Puppeteer's networkidle0/networkidle2).
+
+		Polls the network state until it remains stable for the configured idle_time,
+		or until the timeout is reached.
+
+		Returns:
+			True if network became idle, False if timeout was reached
+		"""
+		profile = self.browser_session.browser_profile
+		idle_time = profile.network_idle_time
+		max_inflight = profile.network_idle_max_inflight
+		timeout = profile.network_idle_timeout
+		poll_interval = profile.network_idle_poll_interval
+
+		start_time = time.time()
+		last_change_time = start_time
+
+		while time.time() - start_time < timeout:
+			try:
+				pending = await self._get_pending_network_requests()
+				current_inflight = len(pending)
+
+				if current_inflight <= max_inflight:
+					# Network is "idle" - check if it's been idle long enough
+					if time.time() - last_change_time >= idle_time:
+						self.logger.debug(
+							f'🔍 Network idle achieved: {current_inflight} requests for {idle_time}s (max_inflight={max_inflight})'
+						)
+						return True
+				else:
+					# Still loading - reset the idle timer
+					self.logger.debug(
+						f'🔍 Network busy: {current_inflight} pending requests (waiting for <= {max_inflight})'
+					)
+					last_change_time = time.time()
+
+				await asyncio.sleep(poll_interval)
+
+			except Exception as e:
+				self.logger.debug(f'Error checking network state: {e}')
+				# On error, wait a bit and try again
+				await asyncio.sleep(poll_interval)
+
+		# Timeout reached
+		elapsed = time.time() - start_time
+		self.logger.debug(f'🔍 Network idle timeout after {elapsed:.2f}s (limit: {timeout}s)')
+		return False
+
 	@observe_debug(ignore_input=True, ignore_output=True, name='browser_state_request_event')
 	async def on_BrowserStateRequestEvent(self, event: BrowserStateRequestEvent) -> 'BrowserStateSummary':
 		"""Handle browser state request by coordinating DOM building and screenshot capture.
@@ -277,13 +326,24 @@ class DOMWatchdog(BaseWatchdog):
 			except Exception as e:
 				self.logger.debug(f'Failed to get pending requests before wait: {e}')
 		pending_requests = pending_requests_before_wait
-		# Wait for page stability using browser profile settings (main branch pattern)
+		# Wait for page stability using browser profile settings
 		if not not_a_meaningful_website:
 			self.logger.debug('🔍 DOMWatchdog.on_BrowserStateRequestEvent: ⏳ Waiting for page stability...')
 			try:
-				if pending_requests_before_wait:
-					await asyncio.sleep(1)
-				self.logger.debug('🔍 DOMWatchdog.on_BrowserStateRequestEvent: ✅ Page stability complete')
+				if self.browser_session.browser_profile.enable_adaptive_network_idle:
+					# Adaptive network idle: poll until network is stable
+					stable = await self._wait_for_network_idle()
+					if stable:
+						self.logger.debug('🔍 DOMWatchdog.on_BrowserStateRequestEvent: ✅ Page stability achieved')
+					else:
+						self.logger.debug(
+							'🔍 DOMWatchdog.on_BrowserStateRequestEvent: ⏱️  Network idle timeout reached, proceeding anyway'
+						)
+				else:
+					# Legacy behavior: fixed 1 second wait if pending requests exist
+					if pending_requests_before_wait:
+						await asyncio.sleep(1)
+					self.logger.debug('🔍 DOMWatchdog.on_BrowserStateRequestEvent: ✅ Page stability complete (legacy mode)')
 			except Exception as e:
 				self.logger.warning(
 					f'🔍 DOMWatchdog.on_BrowserStateRequestEvent: Network waiting failed: {e}, continuing anyway...'
