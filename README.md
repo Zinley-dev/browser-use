@@ -1,218 +1,289 @@
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/2ccdb752-22fb-41c7-8948-857fc1ad7e24"">
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/774a46d5-27a0-490c-b7d0-e65fcbbfa358">
-  <img alt="Shows a black Browser Use Logo in light color mode and a white one in dark color mode." src="https://github.com/user-attachments/assets/774a46d5-27a0-490c-b7d0-e65fcbbfa358"  width="full">
-</picture>
+# Browser-Use × Orion
 
-<div align="center">
-    <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/9955dda9-ede3-4971-8ee0-91cbc3850125"">
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/6797d09b-8ac3-4cb9-ba07-b289e080765a">
-    <img alt="The AI browser agent." src="https://github.com/user-attachments/assets/6797d09b-8ac3-4cb9-ba07-b289e080765a"  width="400">
-    </picture>
-</div>
+**A fork of [browser-use/browser-use](https://github.com/browser-use/browser-use) optimized for [Orion](https://meetorion.app/) browser control capabilities.**
 
-</br>
+This fork enhances the original browser-use library with performance optimizations and features specifically designed for Orion's advanced browser automation and control requirements.
 
 ---
 
-<div align="center">
-<a href="#demos"><img src="https://media.browser-use.tools/badges/demos" alt="Demos"></a>
-<img width="16" height="1" alt="">
-<a href="https://docs.browser-use.com"><img src="https://media.browser-use.tools/badges/docs" alt="Docs"></a>
-<img width="16" height="1" alt="">
-<a href="https://browser-use.com/posts"><img src="https://media.browser-use.tools/badges/blog" alt="Blog"></a>
-<img width="16" height="1" alt="">
-<a href="https://browsermerch.com"><img src="https://media.browser-use.tools/badges/merch" alt="Merch"></a>
-<img width="100" height="1" alt="">
-<a href="https://github.com/browser-use/browser-use"><img src="https://media.browser-use.tools/badges/github" alt="Github Stars"></a>
-<img width="4" height="1" alt="">
-<a href="https://x.com/intent/user?screen_name=browser_use"><img src="https://media.browser-use.tools/badges/twitter" alt="Twitter"></a>
-<img width="4 height="1" alt="">
-<a href="https://link.browser-use.com/discord"><img src="https://media.browser-use.tools/badges/discord" alt="Discord"></a>
-<img width="4" height="1" alt="">
-<a href="https://cloud.browser-use.com"><img src="https://media.browser-use.tools/badges/cloud" height="48" alt="Browser-Use Cloud"></a>
-</div>
+## 🎯 What's Different
 
-</br>
+This fork includes optimizations and enhancements for production-grade browser automation:
 
-# 🤖 LLM Quickstart
+### ⚡ Performance Improvements
+- **Adaptive Network Idle Detection**: Intelligent page load waiting that's 5x faster than naive fixed delays
+- **Smart Request Filtering**: Automatically filters ads, tracking, and noise from page load detection
+- **Configurable Stability Thresholds**: Fine-tune when pages are "ready" for your use case
 
-1. Direct your favorite coding agent (Cursor, ClaudeS, etc) to [Agents.md](https://docs.browser-use.com/llms-full.txt)
-2. Prompt away!
+### 🔧 Orion Integration
+Optimized to work seamlessly with [Orion](https://meetorion.app/) for:
+- Advanced browser control capabilities
+- Production-grade automation workflows
+- High-performance parallel execution
+- Reliable page state detection
 
-<br/>
+See [NETWORK_IDLE_OPTIMIZATION.md](./NETWORK_IDLE_OPTIMIZATION.md) for technical details on performance improvements.
 
-# 👋 Human Quickstart
+---
 
-**1. Create environment with [uv](https://docs.astral.sh/uv/) (Python>=3.11):**
+## 🚀 Quick Start
+
+**1. Install dependencies (Python >= 3.11):**
 ```bash
-uv init
-```
-
-**2. Install Browser-Use package:**
-```bash
-#  We ship every day - use the latest version!
-uv add browser-use
+# Using uv (recommended)
+uv venv --python 3.11
+source .venv/bin/activate
 uv sync
+
+# Or using pip
+pip install -r requirements.txt
 ```
 
-**3. Get your API key from [Browser Use Cloud](https://cloud.browser-use.com/new-api-key) and add it to your `.env` file (new signups get $10 free credits):**
-```
-# .env
-BROWSER_USE_API_KEY=your-key
-```
-
-**4. Download chromium using playwright's shortcut:**
+**2. Download Chromium:**
 ```bash
 uvx playwright install chromium --with-deps --no-shell
 ```
 
-**5. Run your first agent:**
-```python
-from browser_use import Agent, Browser, ChatBrowserUse
-import asyncio
+**3. Set up your LLM API key:**
+```bash
+# For OpenAI
+export OPENAI_API_KEY=your-key
 
-async def example():
-    browser = Browser(
-        # use_cloud=True,  # Uncomment to use a stealth browser on Browser Use Cloud
-    )
+# For Anthropic
+export ANTHROPIC_API_KEY=your-key
 
-    llm = ChatBrowserUse()
-
-    agent = Agent(
-        task="Find the number of stars of the browser-use repo",
-        llm=llm,
-        browser=browser,
-    )
-
-    history = await agent.run()
-    return history
-
-if __name__ == "__main__":
-    history = asyncio.run(example())
+# Or create a .env file
+echo "OPENAI_API_KEY=your-key" > .env
 ```
 
-Check out the [library docs](https://docs.browser-use.com) and the [cloud docs](https://docs.cloud.browser-use.com) for more!
+**4. Run your first agent:**
+```python
+from browser_use import Agent
+from langchain_openai import ChatOpenAI
+import asyncio
 
-<br/>
+async def main():
+    agent = Agent(
+        task="Find the number of GitHub stars for browser-use/browser-use",
+        llm=ChatOpenAI(model="gpt-4o"),
+    )
 
-# Demos
+    result = await agent.run()
+    print(result)
 
+if __name__ == "__main__":
+    asyncio.run(main())
+```
 
-### 📋 Form-Filling
-#### Task = "Fill in this job application with my resume and information."
-![Job Application Demo](https://github.com/user-attachments/assets/57865ee6-6004-49d5-b2c2-6dff39ec2ba9)
-[Example code ↗](https://github.com/browser-use/browser-use/blob/main/examples/use-cases/apply_to_job.py)
+---
 
+## 📖 Documentation
 
-### 🍎 Grocery-Shopping
-#### Task = "Put this list of items into my instacart."
+### Configuration
 
-https://github.com/user-attachments/assets/a6813fa7-4a7c-40a6-b4aa-382bf88b1850
-
-[Example code ↗](https://github.com/browser-use/browser-use/blob/main/examples/use-cases/buy_groceries.py)
-
-
-### 💻 Personal-Assistant. 
-#### Task = "Help me find parts for a custom PC."
-
-https://github.com/user-attachments/assets/ac34f75c-057a-43ef-ad06-5b2c9d42bf06
-
-[Example code ↗](https://github.com/browser-use/browser-use/blob/main/examples/use-cases/pcpartpicker.py)
-
-
-### 💡See [more examples here ↗](https://docs.browser-use.com/examples) and give us a star!
-
-<br/>
-
-## Integrations, hosting, custom tools, MCP, and more on our [Docs ↗](https://docs.browser-use.com)
-
-<br/>
-
-# FAQ
-
-<details>
-<summary><b>What's the best model to use?</b></summary>
-
-We optimized **ChatBrowserUse()** specifically for browser automation tasks. On avg it completes tasks 3-5x faster than other models with SOTA accuracy.
-
-For other LLM providers, see our [supported models documentation](https://docs.browser-use.com/category/llm-integration).
-</details>
-
-
-<details>
-<summary><b>Can I use custom tools with the agent?</b></summary>
-
-Yes! You can add custom tools to extend the agent's capabilities:
+This fork adds enhanced configuration options for page load optimization:
 
 ```python
-from browser_use.tools import Tool
+from browser_use import Agent
+from browser_use.browser.profile import BrowserProfile
+from langchain_openai import ChatOpenAI
 
-@Tool()
-def custom_tool(param: str) -> str:
-    """Description of what this tool does."""
-    return f"Result: {param}"
+# Configure adaptive network idle detection
+profile = BrowserProfile(
+    # Network idle settings (new in this fork)
+    enable_adaptive_network_idle=True,  # Enable smart waiting
+    network_idle_time=0.5,               # Network must be idle for 500ms
+    network_idle_max_inflight=2,         # Max 2 requests to consider "idle"
+    network_idle_timeout=10.0,           # Max wait time before giving up
+
+    # Standard browser settings
+    headless=False,
+    user_data_dir=None,
+)
 
 agent = Agent(
-    task="Your task",
-    llm=llm,
-    browser=browser,
-    use_custom_tools=[custom_tool],
+    task="Your task here",
+    llm=ChatOpenAI(model="gpt-4o"),
+    browser_profile=profile,
 )
 ```
 
-See our [Custom Tools documentation](https://docs.browser-use.com/custom-tools) for more examples.
-</details>
+### Performance Tuning
 
-<details>
-<summary><b>Can I use this for free?</b></summary>
+**Conservative (Wait for Complete Idle):**
+```python
+BrowserProfile(
+    network_idle_max_inflight=0,      # All requests must finish
+    network_idle_time=0.5,             # Stable for 500ms
+    network_idle_timeout=15.0          # Wait up to 15s
+)
+```
 
-Yes! Browser-Use is open source and free to use. You only need to choose an LLM provider (like OpenAI, Google, ChatBrowserUse, or run local models with Ollama).
-</details>
+**Aggressive (Fast but may miss lazy content):**
+```python
+BrowserProfile(
+    network_idle_max_inflight=5,      # Allow 5 in-flight requests
+    network_idle_time=0.2,             # Stable for 200ms
+    network_idle_timeout=5.0           # Give up after 5s
+)
+```
 
-<details>
-<summary><b>How do I handle authentication?</b></summary>
+**Legacy (Original browser-use behavior):**
+```python
+BrowserProfile(
+    enable_adaptive_network_idle=False  # Disable optimizations
+)
+```
 
-Check out our authentication examples:
-- [Using real browser profiles](https://github.com/browser-use/browser-use/blob/main/examples/browser/real_browser.py) - Reuse your existing Chrome profile with saved logins
-- If you want to use temporary accounts with inbox, choose AgentMail
-- To sync your auth profile with the remote browser, run `curl -fsSL https://browser-use.com/profile.sh | BROWSER_USE_API_KEY=XXXX sh` (replace XXXX with your API key)
+---
 
-These examples show how to maintain sessions and handle authentication seamlessly.
-</details>
+## 🧪 Testing
 
-<details>
-<summary><b>How do I solve CAPTCHAs?</b></summary>
+```bash
+# Run all tests
+uv run pytest tests/ci -v
 
-For CAPTCHA handling, you need better browser fingerprinting and proxies. Use [Browser Use Cloud](https://cloud.browser-use.com) which provides stealth browsers designed to avoid detection and CAPTCHA challenges.
-</details>
+# Run specific test suite
+uv run pytest tests/ci/browser/test_page_load_timing.py -v
 
-<details>
-<summary><b>How do I go into production?</b></summary>
+# Type checking
+uv run pyright
+```
 
-Chrome can consume a lot of memory, and running many agents in parallel can be tricky to manage.
+---
 
-For production use cases, use our [Browser Use Cloud API](https://cloud.browser-use.com) which handles:
-- Scalable browser infrastructure
-- Memory management
-- Proxy rotation
-- Stealth browser fingerprinting
-- High-performance parallel execution
-</details>
+## 📊 Performance Comparison
 
-<br/>
+| Scenario | Original | This Fork | Improvement |
+|----------|----------|-----------|-------------|
+| Simple page | ~1 second | ~0-200ms | **5x faster** |
+| Slow page (3s load) | Captures too early ❌ | Waits until stable ✅ | **More reliable** |
+| Already loaded | Waits 1s unnecessarily | Returns immediately | **Eliminates waste** |
+
+---
+
+## 🔗 Links
+
+- **Original Project**: [browser-use/browser-use](https://github.com/browser-use/browser-use)
+- **Orion**: [meetorion.app](https://meetorion.app/)
+- **Original Docs**: [docs.browser-use.com](https://docs.browser-use.com)
+- **Optimization Details**: [NETWORK_IDLE_OPTIMIZATION.md](./NETWORK_IDLE_OPTIMIZATION.md)
+
+---
+
+## 🛠️ Development
+
+```bash
+# Clone the repo
+git clone https://github.com/YOUR_USERNAME/browser-use.git
+cd browser-use
+
+# Install dev dependencies
+uv sync
+
+# Run tests
+uv run pytest tests/ci -v
+
+# Type check
+uv run pyright
+
+# Format code
+uv run ruff format
+uv run ruff check --fix
+```
+
+---
+
+## 📝 Examples
+
+### Basic Usage
+```python
+from browser_use import Agent
+from langchain_openai import ChatOpenAI
+import asyncio
+
+async def search_example():
+    agent = Agent(
+        task="Search for the latest news about AI",
+        llm=ChatOpenAI(model="gpt-4o"),
+    )
+    await agent.run()
+
+asyncio.run(search_example())
+```
+
+### Custom Tools
+```python
+from browser_use import Agent
+from browser_use.tools import Tool
+from langchain_openai import ChatOpenAI
+
+@Tool()
+def get_weather(city: str) -> str:
+    """Get weather for a city."""
+    return f"Weather in {city}: Sunny, 72°F"
+
+agent = Agent(
+    task="Check weather in San Francisco",
+    llm=ChatOpenAI(model="gpt-4o"),
+    use_custom_tools=[get_weather],
+)
+```
+
+### Using Real Browser Profile
+```python
+from browser_use import Agent
+from browser_use.browser.profile import BrowserProfile
+from langchain_openai import ChatOpenAI
+from pathlib import Path
+
+profile = BrowserProfile(
+    user_data_dir=Path.home() / ".config" / "google-chrome" / "Default",
+    headless=False,
+)
+
+agent = Agent(
+    task="Check my Gmail inbox",
+    llm=ChatOpenAI(model="gpt-4o"),
+    browser_profile=profile,
+)
+```
+
+More examples in the [examples/](./examples/) directory.
+
+---
+
+## 🤝 Contributing
+
+This is a fork optimized for Orion integration. For contributions to the core browser-use library, please see the [original repository](https://github.com/browser-use/browser-use).
+
+For Orion-specific improvements and optimizations:
+1. Fork this repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+---
+
+## 📄 License
+
+Same as the original [browser-use](https://github.com/browser-use/browser-use) project.
+
+---
+
+## 🙏 Credits
+
+- **Original Project**: [browser-use](https://github.com/browser-use/browser-use) by Magnus and Gregor
+- **Orion Integration**: Optimizations for [Orion](https://meetorion.app/) browser control capabilities
+- **Community**: All contributors to the browser-use ecosystem
+
+---
 
 <div align="center">
-  
-**Tell your computer what to do, and it gets it done.**
 
-<img src="https://github.com/user-attachments/assets/06fa3078-8461-4560-b434-445510c1766f" width="400"/>
+**Intelligent browser automation for production workloads**
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/Magnus?style=social)](https://x.com/intent/user?screen_name=mamagnus00)
-&emsp;&emsp;&emsp;
-[![Twitter Follow](https://img.shields.io/twitter/follow/Gregor?style=social)](https://x.com/intent/user?screen_name=gregpr07)
+Forked with ❤️ for Orion
 
 </div>
-
-<div align="center"> Made with ❤️ in Zurich and San Francisco </div>
