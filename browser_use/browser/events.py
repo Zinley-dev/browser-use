@@ -526,8 +526,8 @@ class FileDownloadedEvent(BaseEvent):
 	event_timeout: float | None = _get_timeout('TIMEOUT_FileDownloadedEvent', 30.0)  # seconds
 
 
-class AboutBlankDVDScreensaverShownEvent(BaseEvent):
-	"""AboutBlankWatchdog has shown DVD screensaver animation on an about:blank tab."""
+class AboutBlankAnimationShownEvent(BaseEvent):
+	"""AboutBlankWatchdog has shown text animation on an about:blank tab."""
 
 	target_id: TargetID
 	error: str | None = None

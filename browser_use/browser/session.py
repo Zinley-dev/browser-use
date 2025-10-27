@@ -1255,7 +1255,7 @@ class BrowserSession(BaseModel):
 		# SecurityWatchdog only handles security policy enforcement
 		self._security_watchdog.attach_to_session()
 
-		# Initialize AboutBlankWatchdog (handles about:blank pages and DVD loading animation on first load)
+		# Initialize AboutBlankWatchdog (handles about:blank pages and text loading animation on first load)
 		AboutBlankWatchdog.model_rebuild()
 		self._aboutblank_watchdog = AboutBlankWatchdog(event_bus=self.event_bus, browser_session=self)
 		# self.event_bus.on(BrowserStopEvent, self._aboutblank_watchdog.on_BrowserStopEvent)

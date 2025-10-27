@@ -1,4 +1,4 @@
-"""About:blank watchdog for managing about:blank tabs with DVD screensaver."""
+"""About:blank watchdog for managing about:blank tabs with bouncing text animation."""
 
 from typing import TYPE_CHECKING, ClassVar
 
@@ -7,7 +7,7 @@ from cdp_use.cdp.target import TargetID
 from pydantic import PrivateAttr
 
 from browser_use.browser.events import (
-	AboutBlankDVDScreensaverShownEvent,
+	AboutBlankAnimationShownEvent,
 	BrowserStopEvent,
 	BrowserStoppedEvent,
 	CloseTabEvent,
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 class AboutBlankWatchdog(BaseWatchdog):
-	"""Ensures there's always exactly one about:blank tab with DVD screensaver."""
+	"""Ensures there's always exactly one about:blank tab with bouncing text animation."""
 
 	# Event contracts
 	LISTENS_TO: ClassVar[list[type[BaseEvent]]] = [
@@ -34,7 +34,7 @@ class AboutBlankWatchdog(BaseWatchdog):
 	EMITS: ClassVar[list[type[BaseEvent]]] = [
 		NavigateToUrlEvent,
 		CloseTabEvent,
-		AboutBlankDVDScreensaverShownEvent,
+		AboutBlankAnimationShownEvent,
 	]
 
 	_stopping: bool = PrivateAttr(default=False)
@@ -53,9 +53,9 @@ class AboutBlankWatchdog(BaseWatchdog):
 		"""Check tabs when a new tab is created."""
 		# logger.debug(f'[AboutBlankWatchdog] ➕ New tab created: {event.url}')
 
-		# If an about:blank tab was created, show DVD screensaver on all about:blank tabs
+		# If an about:blank tab was created, show text animation on all about:blank tabs
 		if event.url == 'about:blank':
-			await self._show_dvd_screensaver_on_about_blank_tabs()
+			await self._show_text_animation_on_about_blank_tabs()
 
 	async def on_TabClosedEvent(self, event: TabClosedEvent) -> None:
 		"""Check tabs when a tab is closed and proactively create about:blank if needed."""
@@ -76,8 +76,8 @@ class AboutBlankWatchdog(BaseWatchdog):
 			# Create the animation tab since no tabs should remain
 			navigate_event = self.event_bus.dispatch(NavigateToUrlEvent(url='about:blank', new_tab=True))
 			await navigate_event
-			# Show DVD screensaver on the new tab
-			await self._show_dvd_screensaver_on_about_blank_tabs()
+			# Show text animation on the new tab
+			await self._show_text_animation_on_about_blank_tabs()
 		else:
 			# Multiple tabs exist, check after close
 			await self._check_and_ensure_about_blank_tab()
@@ -95,18 +95,18 @@ class AboutBlankWatchdog(BaseWatchdog):
 			# If no tabs exist at all, create one to keep browser alive
 			if len(page_targets) == 0:
 				# Only create a new tab if there are no tabs at all
-				self.logger.debug('[AboutBlankWatchdog] No tabs exist, creating new about:blank DVD screensaver tab')
+				self.logger.debug('[AboutBlankWatchdog] No tabs exist, creating new about:blank text animation tab')
 				navigate_event = self.event_bus.dispatch(NavigateToUrlEvent(url='about:blank', new_tab=True))
 				await navigate_event
-				# Show DVD screensaver on the new tab
-				await self._show_dvd_screensaver_on_about_blank_tabs()
+				# Show text animation on the new tab
+				await self._show_text_animation_on_about_blank_tabs()
 			# Otherwise there are tabs, don't create new ones to avoid interfering
 
 		except Exception as e:
 			self.logger.error(f'[AboutBlankWatchdog] Error ensuring about:blank tab: {e}')
 
-	async def _show_dvd_screensaver_on_about_blank_tabs(self) -> None:
-		"""Show DVD screensaver on all about:blank pages only."""
+	async def _show_text_animation_on_about_blank_tabs(self) -> None:
+		"""Show text animation on all about:blank pages only."""
 		try:
 			# Get just the page targets without expensive title fetching
 			page_targets = await self.browser_session._cdp_get_all_pages()
@@ -118,46 +118,46 @@ class AboutBlankWatchdog(BaseWatchdog):
 
 				# Only target about:blank pages specifically
 				if url == 'about:blank':
-					await self._show_dvd_screensaver_loading_animation_cdp(target_id, browser_session_label)
+					await self._show_text_animation_cdp(target_id, browser_session_label)
 
 		except Exception as e:
-			self.logger.error(f'[AboutBlankWatchdog] Error showing DVD screensaver: {e}')
+			self.logger.error(f'[AboutBlankWatchdog] Error showing text animation: {e}')
 
-	async def _show_dvd_screensaver_loading_animation_cdp(self, target_id: TargetID, browser_session_label: str) -> None:
+	async def _show_text_animation_cdp(self, target_id: TargetID, browser_session_label: str) -> None:
 		"""
-		Injects a DVD screensaver-style bouncing logo loading animation overlay into the target using CDP.
+		Injects a bouncing text animation overlay into the target using CDP.
 		This is used to visually indicate that the browser is setting up or waiting.
 		"""
 		try:
 			# Create temporary session for this target without switching focus
 			temp_session = await self.browser_session.get_or_create_cdp_session(target_id, focus=False)
 
-			# Inject the DVD screensaver script (from main branch with idempotency added)
+			# Inject the text animation script
 			script = f"""
 				(function(browser_session_label) {{
 					// Idempotency check
-					if (window.__dvdAnimationRunning) {{
+					if (window.__bounceAnimationRunning) {{
 						return; // Already running, don't add another
 					}}
-					window.__dvdAnimationRunning = true;
-					
+					window.__bounceAnimationRunning = true;
+
 					// Ensure document.body exists before proceeding
 					if (!document.body) {{
 						// Try again after DOM is ready
-						window.__dvdAnimationRunning = false; // Reset flag to retry
+						window.__bounceAnimationRunning = false; // Reset flag to retry
 						if (document.readyState === 'loading') {{
 							document.addEventListener('DOMContentLoaded', () => arguments.callee(browser_session_label));
 						}}
 						return;
 					}}
-					
+
 					const animated_title = `Orion is waking up...`;
 					if (document.title === animated_title) {{
 						return;      // already run on this tab, dont run again
 					}}
 					document.title = animated_title;
 
-					// Create the main overlay
+					// Create the main overlay with subtle gradient
 					const loadingOverlay = document.createElement('div');
 					loadingOverlay.id = 'pretty-loading-animation';
 					loadingOverlay.style.position = 'fixed';
@@ -165,57 +165,85 @@ class AboutBlankWatchdog(BaseWatchdog):
 					loadingOverlay.style.left = '0';
 					loadingOverlay.style.width = '100vw';
 					loadingOverlay.style.height = '100vh';
-					loadingOverlay.style.background = '#000';
+					loadingOverlay.style.background = 'radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 100%)';
 					loadingOverlay.style.zIndex = '99999';
 					loadingOverlay.style.overflow = 'hidden';
 
-					// Create the image element
-					const img = document.createElement('img');
-					img.src = 'https://raw.githubusercontent.com/Zinley-dev/orion-cli-1/main/favicon.svg';
-					img.alt = 'Orion';
-					img.style.width = '200px';
-					img.style.height = 'auto';
-					img.style.position = 'absolute';
-					img.style.left = '0px';
-					img.style.top = '0px';
-					img.style.zIndex = '2';
-					img.style.opacity = '0.8';
+					// Create glass container for the text
+					const glassContainer = document.createElement('div');
+					glassContainer.style.position = 'absolute';
+					glassContainer.style.padding = '40px 60px';
+					glassContainer.style.background = 'rgba(255, 255, 255, 0.03)';
+					glassContainer.style.backdropFilter = 'blur(40px) saturate(180%)';
+					glassContainer.style.webkitBackdropFilter = 'blur(40px) saturate(180%)';
+					glassContainer.style.borderRadius = '30px';
+					glassContainer.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+					glassContainer.style.boxShadow = '0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)';
+					glassContainer.style.left = '0px';
+					glassContainer.style.top = '0px';
 
-					loadingOverlay.appendChild(img);
+					// Create the text element
+					const textElement = document.createElement('div');
+					textElement.textContent = 'ORION';
+					textElement.style.fontSize = '64px';
+					textElement.style.fontWeight = '700';
+					textElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+					textElement.style.background = 'linear-gradient(135deg, #a8c0ff 0%, #c3cfe2 25%, #ffffff 50%, #a8c0ff 75%, #c3cfe2 100%)';
+					textElement.style.backgroundSize = '300% 300%';
+					textElement.style.backgroundClip = 'text';
+					textElement.style.webkitBackgroundClip = 'text';
+					textElement.style.color = 'transparent';
+					textElement.style.letterSpacing = '0.05em';
+					textElement.style.userSelect = 'none';
+					textElement.style.pointerEvents = 'none';
+					textElement.style.whiteSpace = 'nowrap';
+					textElement.style.filter = 'drop-shadow(0 0 20px rgba(168, 192, 255, 0.3))';
+
+					glassContainer.appendChild(textElement);
+					loadingOverlay.appendChild(glassContainer);
 					document.body.appendChild(loadingOverlay);
 
-					// DVD screensaver bounce logic
-					let x = Math.random() * (window.innerWidth - 300);
-					let y = Math.random() * (window.innerHeight - 300);
-					let dx = 1.2 + Math.random() * 0.4; // px per frame
-					let dy = 1.2 + Math.random() * 0.4;
+					// Gradient animation
+					let gradientPos = 0;
+					function animateGradient() {{
+						gradientPos = (gradientPos + 1) % 300;
+						textElement.style.backgroundPosition = `${{gradientPos}}% 50%`;
+					}}
+					setInterval(animateGradient, 30);
+
+					// Smooth bounce animation logic
+					let x = Math.random() * (window.innerWidth - 500);
+					let y = Math.random() * (window.innerHeight - 250);
+					let dx = 1.2 + Math.random() * 0.3; // Slower, smoother movement
+					let dy = 1.2 + Math.random() * 0.3;
 					// Randomize direction
 					if (Math.random() > 0.5) dx = -dx;
 					if (Math.random() > 0.5) dy = -dy;
 
 					function animate() {{
-						const imgWidth = img.offsetWidth || 300;
-						const imgHeight = img.offsetHeight || 300;
+						const containerWidth = glassContainer.offsetWidth || 500;
+						const containerHeight = glassContainer.offsetHeight || 250;
 						x += dx;
 						y += dy;
 
 						if (x <= 0) {{
 							x = 0;
 							dx = Math.abs(dx);
-						}} else if (x + imgWidth >= window.innerWidth) {{
-							x = window.innerWidth - imgWidth;
+						}} else if (x + containerWidth >= window.innerWidth) {{
+							x = window.innerWidth - containerWidth;
 							dx = -Math.abs(dx);
 						}}
 						if (y <= 0) {{
 							y = 0;
 							dy = Math.abs(dy);
-						}} else if (y + imgHeight >= window.innerHeight) {{
-							y = window.innerHeight - imgHeight;
+						}} else if (y + containerHeight >= window.innerHeight) {{
+							y = window.innerHeight - containerHeight;
 							dy = -Math.abs(dy);
 						}}
 
-						img.style.left = `${{x}}px`;
-						img.style.top = `${{y}}px`;
+						glassContainer.style.left = `${{x}}px`;
+						glassContainer.style.top = `${{y}}px`;
+						glassContainer.style.transform = 'translateZ(0)'; // Hardware acceleration
 
 						requestAnimationFrame(animate);
 					}}
@@ -223,19 +251,19 @@ class AboutBlankWatchdog(BaseWatchdog):
 
 					// Responsive: update bounds on resize
 					window.addEventListener('resize', () => {{
-						x = Math.min(x, window.innerWidth - img.offsetWidth);
-						y = Math.min(y, window.innerHeight - img.offsetHeight);
+						x = Math.min(x, window.innerWidth - glassContainer.offsetWidth);
+						y = Math.min(y, window.innerHeight - glassContainer.offsetHeight);
 					}});
 
-					// Add a little CSS for smoothness
+					// Add CSS for premium smoothness
 					const style = document.createElement('style');
 					style.textContent = `
 						#pretty-loading-animation {{
-							/*backdrop-filter: blur(2px) brightness(0.9);*/
+							will-change: opacity;
 						}}
-						#pretty-loading-animation img {{
-							user-select: none;
-							pointer-events: none;
+						#pretty-loading-animation > div {{
+							will-change: transform;
+							transition: transform 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 						}}
 					`;
 					document.head.appendChild(style);
@@ -247,7 +275,7 @@ class AboutBlankWatchdog(BaseWatchdog):
 			# No need to detach - session is cached
 
 			# Dispatch event
-			self.event_bus.dispatch(AboutBlankDVDScreensaverShownEvent(target_id=target_id))
+			self.event_bus.dispatch(AboutBlankAnimationShownEvent(target_id=target_id))
 
 		except Exception as e:
-			self.logger.error(f'[AboutBlankWatchdog] Error injecting DVD screensaver: {e}')
+			self.logger.error(f'[AboutBlankWatchdog] Error injecting text animation: {e}')
