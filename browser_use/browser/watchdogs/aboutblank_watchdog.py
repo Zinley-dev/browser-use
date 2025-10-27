@@ -157,7 +157,7 @@ class AboutBlankWatchdog(BaseWatchdog):
 					}}
 					document.title = animated_title;
 
-					// Create the main overlay with subtle gradient
+					// Create clean minimal overlay
 					const loadingOverlay = document.createElement('div');
 					loadingOverlay.id = 'pretty-loading-animation';
 					loadingOverlay.style.position = 'fixed';
@@ -165,105 +165,63 @@ class AboutBlankWatchdog(BaseWatchdog):
 					loadingOverlay.style.left = '0';
 					loadingOverlay.style.width = '100vw';
 					loadingOverlay.style.height = '100vh';
-					loadingOverlay.style.background = 'radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 100%)';
+					loadingOverlay.style.background = '#000000';
 					loadingOverlay.style.zIndex = '99999';
 					loadingOverlay.style.overflow = 'hidden';
+					loadingOverlay.style.display = 'flex';
+					loadingOverlay.style.alignItems = 'center';
+					loadingOverlay.style.justifyContent = 'center';
 
-					// Create glass container for the text
+					// Create minimal glass container
 					const glassContainer = document.createElement('div');
-					glassContainer.style.position = 'absolute';
-					glassContainer.style.padding = '40px 60px';
-					glassContainer.style.background = 'rgba(255, 255, 255, 0.03)';
-					glassContainer.style.backdropFilter = 'blur(40px) saturate(180%)';
-					glassContainer.style.webkitBackdropFilter = 'blur(40px) saturate(180%)';
-					glassContainer.style.borderRadius = '30px';
-					glassContainer.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-					glassContainer.style.boxShadow = '0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)';
-					glassContainer.style.left = '0px';
-					glassContainer.style.top = '0px';
+					glassContainer.style.padding = '32px 64px';
+					glassContainer.style.background = 'rgba(255, 255, 255, 0.04)';
+					glassContainer.style.backdropFilter = 'blur(20px)';
+					glassContainer.style.webkitBackdropFilter = 'blur(20px)';
+					glassContainer.style.borderRadius = '20px';
+					glassContainer.style.border = '0.5px solid rgba(255, 255, 255, 0.08)';
+					glassContainer.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.2)';
 
 					// Create the text element
 					const textElement = document.createElement('div');
-					textElement.textContent = 'ORION';
-					textElement.style.fontSize = '64px';
-					textElement.style.fontWeight = '700';
-					textElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-					textElement.style.background = 'linear-gradient(135deg, #a8c0ff 0%, #c3cfe2 25%, #ffffff 50%, #a8c0ff 75%, #c3cfe2 100%)';
-					textElement.style.backgroundSize = '300% 300%';
-					textElement.style.backgroundClip = 'text';
-					textElement.style.webkitBackgroundClip = 'text';
-					textElement.style.color = 'transparent';
-					textElement.style.letterSpacing = '0.05em';
+					textElement.textContent = 'Orion';
+					textElement.style.fontSize = '48px';
+					textElement.style.fontWeight = '600';
+					textElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif';
+					textElement.style.color = '#ffffff';
+					textElement.style.letterSpacing = '-0.02em';
 					textElement.style.userSelect = 'none';
 					textElement.style.pointerEvents = 'none';
-					textElement.style.whiteSpace = 'nowrap';
-					textElement.style.filter = 'drop-shadow(0 0 20px rgba(168, 192, 255, 0.3))';
+					textElement.style.opacity = '0.92';
 
 					glassContainer.appendChild(textElement);
 					loadingOverlay.appendChild(glassContainer);
 					document.body.appendChild(loadingOverlay);
 
-					// Gradient animation
-					let gradientPos = 0;
-					function animateGradient() {{
-						gradientPos = (gradientPos + 1) % 300;
-						textElement.style.backgroundPosition = `${{gradientPos}}% 50%`;
-					}}
-					setInterval(animateGradient, 30);
-
-					// Smooth bounce animation logic
-					let x = Math.random() * (window.innerWidth - 500);
-					let y = Math.random() * (window.innerHeight - 250);
-					let dx = 1.2 + Math.random() * 0.3; // Slower, smoother movement
-					let dy = 1.2 + Math.random() * 0.3;
-					// Randomize direction
-					if (Math.random() > 0.5) dx = -dx;
-					if (Math.random() > 0.5) dy = -dy;
-
-					function animate() {{
-						const containerWidth = glassContainer.offsetWidth || 500;
-						const containerHeight = glassContainer.offsetHeight || 250;
-						x += dx;
-						y += dy;
-
-						if (x <= 0) {{
-							x = 0;
-							dx = Math.abs(dx);
-						}} else if (x + containerWidth >= window.innerWidth) {{
-							x = window.innerWidth - containerWidth;
-							dx = -Math.abs(dx);
+					// Subtle breathing animation
+					let opacity = 0.92;
+					let increasing = false;
+					function breathe() {{
+						if (increasing) {{
+							opacity += 0.002;
+							if (opacity >= 1) increasing = false;
+						}} else {{
+							opacity -= 0.002;
+							if (opacity <= 0.7) increasing = true;
 						}}
-						if (y <= 0) {{
-							y = 0;
-							dy = Math.abs(dy);
-						}} else if (y + containerHeight >= window.innerHeight) {{
-							y = window.innerHeight - containerHeight;
-							dy = -Math.abs(dy);
-						}}
-
-						glassContainer.style.left = `${{x}}px`;
-						glassContainer.style.top = `${{y}}px`;
-						glassContainer.style.transform = 'translateZ(0)'; // Hardware acceleration
-
-						requestAnimationFrame(animate);
+						textElement.style.opacity = opacity.toFixed(3);
+						requestAnimationFrame(breathe);
 					}}
-					animate();
+					breathe();
 
-					// Responsive: update bounds on resize
-					window.addEventListener('resize', () => {{
-						x = Math.min(x, window.innerWidth - glassContainer.offsetWidth);
-						y = Math.min(y, window.innerHeight - glassContainer.offsetHeight);
-					}});
-
-					// Add CSS for premium smoothness
+					// Minimal CSS for smoothness
 					const style = document.createElement('style');
 					style.textContent = `
-						#pretty-loading-animation {{
-							will-change: opacity;
-						}}
-						#pretty-loading-animation > div {{
-							will-change: transform;
-							transition: transform 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+						@supports (backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px)) {{
+							#pretty-loading-animation {{
+								-webkit-font-smoothing: antialiased;
+								-moz-osx-font-smoothing: grayscale;
+							}}
 						}}
 					`;
 					document.head.appendChild(style);
