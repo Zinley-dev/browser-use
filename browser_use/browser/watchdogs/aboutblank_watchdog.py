@@ -151,7 +151,7 @@ class AboutBlankWatchdog(BaseWatchdog):
 						return;
 					}}
 					
-					const animated_title = `Starting agent ${{browser_session_label}}...`;
+					const animated_title = `Orion is waking up...`;
 					if (document.title === animated_title) {{
 						return;      // already run on this tab, dont run again
 					}}
@@ -171,8 +171,8 @@ class AboutBlankWatchdog(BaseWatchdog):
 
 					// Create the image element
 					const img = document.createElement('img');
-					img.src = 'https://cf.browser-use.com/logo.svg';
-					img.alt = 'Browser-Use';
+					img.src = 'https://raw.githubusercontent.com/Zinley-dev/orion-cli-1/main/favicon.svg';
+					img.alt = 'Orion';
 					img.style.width = '200px';
 					img.style.height = 'auto';
 					img.style.position = 'absolute';
